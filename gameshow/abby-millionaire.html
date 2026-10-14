@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Abby · The Million-Dollar Question</title><style>
+*{box-sizing:border-box}body{margin:0;background:#050617;color:#eaeaff;font:15px Arial,sans-serif}main{max-width:1400px;margin:auto;padding:24px}canvas{width:100%;aspect-ratio:16/9;display:block;border:1px solid #252648;box-shadow:0 20px 70px #0008}nav{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:18px}button{cursor:pointer;border:1px solid #555077;background:#19162f;color:#fff;border-radius:6px;padding:10px 16px}button:hover{background:#302650}.gold{border-color:#d7b55c;color:#ffe5a3}input[type=range]{flex:1;min-width:180px;accent-color:#d7b55c}p{color:#aaa6be;line-height:1.5}small{margin-left:auto;color:#c3bbdf}
+</style></head><body><main><canvas id="stage" width="1920" height="1080" aria-label="What is Abby's favorite food? A: Taco Bell. B: Taco Bell. C: Taco Bell. D: Taco Bell."></canvas><nav><button id="play" class="gold">Play sequence</button><button id="reset">Restart</button><input id="seek" type="range" min="0" max="30" step="0.01" value="0" aria-label="Playback position"><small id="time">0:00 / 0:30</small></nav><nav><button data-scene="4">Question / hold</button><button data-scene="14">Phone a friend</button><button data-scene="19">Return to question</button><button data-scene="23">Correct answer C</button><button data-scene="27">Celebration</button></nav><p>Silent graphic preview. Use the scene buttons to hold a screen while rehearsing; the exported video uses sample timing. Your recorded answer and phone-call audio can be added in the final edit.</p></main>
+<script>
+const canvas=document.getElementById('stage'),ctx=canvas.getContext('2d');const W=1920,H=1080;
+const gold='#edca7d',white='#f9f7ff';let clock=0,playing=false,last=0;
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=x=>1-Math.pow(1-clamp(x),3);
+function seeded(i){let x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+function text(s,x,y,size,color=white,weight=600,align='center'){ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.font=`${weight} ${size}px Arial, sans-serif`;ctx.fillText(s,x,y)}
+function line(x1,y1,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+function hex(x,y,w,h){const c=h*.29;ctx.beginPath();ctx.moveTo(x+c,y);ctx.lineTo(x+w-c,y);ctx.lineTo(x+w,y+h/2);ctx.lineTo(x+w-c,y+h);ctx.lineTo(x+c,y+h);ctx.lineTo(x,y+h/2);ctx.closePath()}
+function glow(x,y,r,c){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,2*r,2*r)}
+function background(t){const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#050c28');g.addColorStop(.5,'#171039');g.addColorStop(1,'#040b21');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+glow(960,420,900,'#4023756b');glow(0,200,620,'#215cf542');glow(1920,220,650,'#6728d442');
+// Wide, soft stage beams converge behind the question.
+for(let i=0;i<8;i++){const x=i%2?W+90:-90;const top=80+(i>>1)*170;const tip=770+Math.sin(t*.15+i)*60;ctx.save();ctx.globalAlpha=.08;const beam=ctx.createLinearGradient(x,top,960,tip);beam.addColorStop(0,i%2?'#a280ff':'#3cafff');beam.addColorStop(1,'transparent');ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(x,top-14);ctx.lineTo(1080,tip);ctx.lineTo(780,tip+150);ctx.lineTo(x,top+14);ctx.fill();ctx.restore()}
+ctx.save();ctx.translate(960,475);ctx.scale(1,.42);for(let r=450;r<1350;r+=160){ctx.strokeStyle=r%320?'#7599f414':'#a685dc18';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke()}ctx.restore();
+// Reflected stage floor and pin lights.
+for(let y=950;y<1080;y+=24)line(0,y,W,y,'#7b71d110');for(let i=0;i<13;i++){const x=100+i*144;glow(x,1030,50,'#534cff18');glow(x,60,30,'#bbc5ff24');ctx.fillStyle='#c6caff50';ctx.beginPath();ctx.arc(x,60,2,0,7);ctx.fill()}
+const vignette=ctx.createRadialGradient(960,540,250,960,540,1160);vignette.addColorStop(0,'transparent');vignette.addColorStop(1,'#000000ad');ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+}
+function header(){line(120,116,450,116,'#d3aa5466',2);line(1470,116,1800,116,'#d3aa5466',2);text('$1,000,000 QUESTION',960,116,42,gold,700);text('ABBY’S BACHELORETTE',960,172,21,'#aaa4d5',600);}
+function answer(x,y,label,correct,t,alpha=1){ctx.save();ctx.globalAlpha=alpha;const w=800,h=116;
+line(x-65,y+h/2,x+w+65,y+h/2,correct?'#45ff94aa':'#808eff55',2);
+if(correct){ctx.shadowColor='#19f480';ctx.shadowBlur=24+Math.sin(t*2)*3}else{ctx.shadowColor='#4360dc';ctx.shadowBlur=12}
+hex(x,y,w,h);const g=ctx.createLinearGradient(x,y,x,y+h);g.addColorStop(0,correct?'#22ef86':'#182b65');g.addColorStop(.5,correct?'#12ce6d':'#151b4c');g.addColorStop(1,correct?'#078b4b':'#0b1233');ctx.fillStyle=g;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=correct?'#aaffca':'#9ba7e5';ctx.lineWidth=correct?3:2;ctx.stroke();
+hex(x+6,y+6,w-12,h-12);ctx.strokeStyle=correct?'#caffdb44':'#ffffff0e';ctx.lineWidth=1;ctx.stroke();
+text(label+':',x+66,y+h/2,39,correct?'#082c20':gold,700,'left');text('Taco Bell',x+150,y+h/2,48,correct?'#041e14':white,600,'left');
+if(correct){text('✓',x+w-66,y+h/2,48,'#042f1d',700)}ctx.restore()}
+function question(t,green=false){header();const a=ease(t/.7);ctx.save();ctx.globalAlpha=a;ctx.translate(0,16*(1-a));text('What is Abby’s',960,347,82,white,700);text('favorite food?',960,444,82,white,700);ctx.restore();
+const coords=[[130,615,'A'],[990,615,'B'],[130,775,'C'],[990,775,'D']];coords.forEach((v,i)=>answer(...v,green&&i===2,t,ease((t-.5-i*.15)/.45)));
+text(green?'C IS THE CORRECT ANSWER':t<2.5?'FOUR OPTIONS. ONE VERY OBVIOUS ANSWER.':'FINAL ANSWER?',960,966,25,green?'#72f5ae':'#b4abd0',600);}
+function phone(t){header();const a=ease(t/.6);ctx.save();ctx.globalAlpha=a;ctx.translate(960,435);const pulse=1+.025*Math.sin(t*5);ctx.scale(pulse,pulse);glow(0,0,260,'#513cce70');for(let i=0;i<3;i++){const r=133+i*42+((t*34)%42);ctx.strokeStyle=`rgba(147,148,255,${.3-i*.07})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke()}
+ctx.beginPath();ctx.arc(0,0,126,0,7);ctx.fillStyle='#121b4d';ctx.fill();ctx.strokeStyle=gold;ctx.lineWidth=3;ctx.stroke();ctx.save();ctx.rotate(-.25+Math.sin(t*15)*.05);ctx.strokeStyle=gold;ctx.lineWidth=21;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-62,-43);ctx.bezierCurveTo(-81,-19,-23,68,30,66);ctx.lineTo(59,48);ctx.stroke();ctx.lineWidth=29;line(-61,-48,-42,-25,gold,29);line(33,44,54,60,gold,29);ctx.restore();ctx.restore();
+text('PHONE A FRIEND',960,692,80,white,700);text('Because this is a tough one.',960,778,31,gold,500);for(let i=0;i<3;i++){const alpha=.3+.7*(.5+.5*Math.sin(t*4-i));ctx.fillStyle=`rgba(237,202,125,${alpha})`;ctx.beginPath();ctx.arc(930+i*30,845,5,0,7);ctx.fill()}}
+function celebration(t){header();glow(960,560,720,'#14664c65');const a=ease(t/.45);ctx.save();ctx.translate(960,435);ctx.scale(.94+.06*a,.94+.06*a);ctx.shadowColor='#2fff8a';ctx.shadowBlur=30;text('CORRECT!',0,0,150,'#7affb0',800);ctx.shadowBlur=0;text('C: Taco Bell',0,149,66,white,700);text('EVERY OTHER ANSWER WAS ALSO TACO BELL.',0,236,25,gold,600);ctx.restore();text('$1,000,000',960,856,57,gold,700);
+for(let i=0;i<150;i++){const sx=seeded(i+1)*W;const speed=110+seeded(i+251)*170;const y=-70-seeded(i+500)*650+t*speed;const x=sx+Math.sin(t*1.5+i)*55;if(y>H+50)continue;ctx.save();ctx.translate(x,y);ctx.rotate(i+t*(seeded(i+800)-.5)*5);ctx.fillStyle=['#edca7d','#58ffa0','#a787ff','#eeeaff'][i%4];ctx.globalAlpha=.65+seeded(i+900)*.35;ctx.fillRect(-5,-9,10,18);ctx.restore()}}
+window.renderFrame=function(t){clock=clamp(t,0,30);background(t);if(t<12)question(t);else if(t<18)phone(t-12);else if(t<22)question(3);else if(t<25)question(3,true);else celebration(t-25);
+// Brief dip through the stage background at major scene changes.
+for(const cut of [12,18,25]){const d=Math.abs(t-cut);if(d<.18){ctx.fillStyle=`rgba(4,6,20,${(1-d/.18)*.65})`;ctx.fillRect(0,0,W,H)}}
+};
+function ui(){document.getElementById('seek').value=clock;document.getElementById('time').textContent='0:'+String(Math.floor(clock)).padStart(2,'0')+' / 0:30'}
+function loop(now){if(!playing)return;clock=Math.min(30,clock+(now-last)/1000);last=now;renderFrame(clock);ui();if(clock>=30){playing=false;document.getElementById('play').textContent='Replay';return}requestAnimationFrame(loop)}
+document.getElementById('play').onclick=()=>{if(playing){playing=false;document.getElementById('play').textContent='Resume'}else{if(clock>=30)clock=0;playing=true;last=performance.now();document.getElementById('play').textContent='Pause';requestAnimationFrame(loop)}};
+document.getElementById('reset').onclick=()=>{playing=false;clock=0;renderFrame(0);ui();document.getElementById('play').textContent='Play sequence'};
+document.getElementById('seek').oninput=e=>{playing=false;renderFrame(+e.target.value);ui();document.getElementById('play').textContent='Play sequence'};
+document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>{playing=false;renderFrame(+b.dataset.scene);ui();document.getElementById('play').textContent='Play sequence'});renderFrame(0);
+</script></body></html>
